@@ -100,6 +100,11 @@ dependencies {
 
     implementation ("com.google.accompanist:accompanist-systemuicontroller:0.30.0")//
 
+    implementation ("androidx.compose.material:material:<latest-version>")
+    implementation ("androidx.compose.material3:material3:<latest-version>")
+    implementation ("androidx.compose.material:material-icons-extended:<latest-version>")
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -112,6 +117,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.espresso.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

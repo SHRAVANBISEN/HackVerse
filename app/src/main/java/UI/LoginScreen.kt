@@ -40,6 +40,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.launch
 import Extras.Result
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.text.input.VisualTransformation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +56,7 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
     val isLoading by authViewModel.isLoading.observeAsState(initial = false)
     val result by authViewModel.authResult.observeAsState()
 
@@ -80,24 +85,25 @@ fun LoginScreen(
         }
     }
 
-    // UI components
+    // Redesigned UI
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                Brush.verticalGradient(
-                    colors = listOf(Color(0xFF003366), Color(0xFF1E88E5))
+                Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF4CAF50), Color(0xFFC8E6C9))
                 )
             ),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .background(Color.White, RoundedCornerShape(24.dp))
-                .padding(16.dp),
+                .fillMaxWidth(0.85f)
+                .background(Color.White, RoundedCornerShape(16.dp))
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Header with Icon
             // Logo Animation
             val logoComposition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.anime3))
             LottieAnimation(
@@ -108,6 +114,8 @@ fun LoginScreen(
                     .padding(bottom = 16.dp)
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Email TextField
             OutlinedTextField(
                 value = email,
@@ -116,7 +124,7 @@ fun LoginScreen(
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 12.dp),
                 singleLine = true
             )
 
@@ -125,10 +133,19 @@ fun LoginScreen(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation(),
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Password Icon") },
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Hide Password" else "Show Password"
+                        )
+                    }
+                },
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 20.dp),
                 singleLine = true
             )
 
@@ -139,7 +156,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E88E5))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
             ) {
                 Text("LOGIN", color = Color.White, fontSize = 16.sp)
             }
@@ -156,7 +173,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4285F4))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA5D6A7))
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.googleicon),
@@ -173,7 +190,7 @@ fun LoginScreen(
             Text(
                 "Don't have an account? Sign up.",
                 modifier = Modifier.clickable { onNavigateToSignUp() },
-                color = Color(0xFF1E88E5),
+                color = Color(0xFF4CAF50),
                 textDecoration = TextDecoration.Underline
             )
         }
@@ -196,6 +213,8 @@ fun LoginScreen(
         }
     }
 }
+
+
 
 // Google Sign-In Helpers
 private fun getGoogleSignInClient(context: Context): GoogleSignInClient {
