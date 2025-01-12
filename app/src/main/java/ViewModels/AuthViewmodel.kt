@@ -38,6 +38,14 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isPrincipalUser = MutableLiveData<Boolean>()
     val isPrincipalUser: LiveData<Boolean> get() = _isPrincipalUser
+    private val _userHomeLocation = MutableLiveData<Result<Pair<Double, Double>>>()
+    val userHomeLocation: LiveData<Result<Pair<Double, Double>>> get() = _userHomeLocation
+
+    fun fetchUserHomeLocation() {
+        viewModelScope.launch {
+            _userHomeLocation.value = userRepository.getUserHomeLocation()
+        }
+    }
 
     init {
         checkUserLoggedIn()
@@ -84,7 +92,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         pinCode: String,
         city: String,
         district: String,
-        role: String
+        role: String,
+        homeLatitude: Double?,
+        homeLongitude: Double?
     ) {
         viewModelScope.launch {
             setLoading(true)
@@ -96,7 +106,9 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 pinCode = pinCode,
                 city = city,
                 district = district,
-                role = role
+                role = role,
+                homeLatitude = homeLatitude,
+                homeLongitude= homeLongitude
             )
             _authResult.value = result
             setLoading(false)

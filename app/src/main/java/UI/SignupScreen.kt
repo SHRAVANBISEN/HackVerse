@@ -1,6 +1,11 @@
 package UI
 import Extras.Result
+import MapApi.MapPickerActivity
 import ViewModels.AuthViewModel
+import android.app.Activity
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -38,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -59,6 +65,8 @@ fun SignupScreen(
     var address by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var district by remember { mutableStateOf("") }
+    var homeLatitude by remember { mutableStateOf("") }
+    var homeLongitude by remember { mutableStateOf("") }
 
     // Dropdown for Roles
     var expandedRole by remember { mutableStateOf(false) }
@@ -67,6 +75,20 @@ fun SignupScreen(
 
     // Observing authentication result
     val authResult by authViewModel.authResult.observeAsState()
+
+    // Map Picker Launcher
+    val context = LocalContext.current
+    val mapPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val latitude = data?.getDoubleExtra("latitude", 0.0) ?: 0.0
+            val longitude = data?.getDoubleExtra("longitude", 0.0) ?: 0.0
+            homeLatitude = latitude.toString()
+            homeLongitude = longitude.toString()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -82,7 +104,6 @@ fun SignupScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                // Signup Logo
                 Image(
                     painter = painterResource(id = R.drawable.luser), // Placeholder for signup logo
                     contentDescription = "Sign-Up Logo",
@@ -102,29 +123,9 @@ fun SignupScreen(
                 )
             }
 
-            // Full Name
-            item {
-                OutlinedTextField(
-                    value = fullName,
-                    onValueChange = { fullName = it },
-                    label = { Text("Full Name") },
-                    leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Person Icon") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Email
-            item {
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    label = { Text("Email") },
-                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Password
+            // Input Fields for Name, Email, Password, Address, PIN Code, City, and District
+            item { createTextField("Full Name", fullName) { fullName = it } }
+            item { createTextField("Email", email) { email = it } }
             item {
                 OutlinedTextField(
                     value = password,
@@ -136,59 +137,12 @@ fun SignupScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+            item { createTextField("Address", address) { address = it } }
+            item { createTextField("PIN Code", pinCode) { pinCode = it } }
+            item { createTextField("City", city) {} }
+            item { createTextField("District", district) {} }
 
-            // Address
-            item {
-                OutlinedTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = { Text("Address") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // PIN Code
-            item {
-                OutlinedTextField(
-                    value = pinCode,
-                    onValueChange = {
-                        pinCode = it
-                        if (it.length == 6) {
-                            // Mock: Autofill City/District (replace with real API)
-                            val location = getCityAndDistrictFromPin(it)
-                            city = location.first
-                            district = location.second
-                        }
-                    },
-                    label = { Text("PIN Code") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // City (Autofilled)
-            item {
-                OutlinedTextField(
-                    value = city,
-                    onValueChange = {},
-                    label = { Text("City") },
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // District (Autofilled)
-            item {
-                OutlinedTextField(
-                    value = district,
-                    onValueChange = {},
-                    label = { Text("District") },
-                    enabled = false,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            // Role Dropdown
+            // Role Selection
             item {
                 DropdownField(
                     label = "Select Role",
@@ -199,6 +153,33 @@ fun SignupScreen(
                     onExpandedChange = { expandedRole = !expandedRole },
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            // Home Location Picker
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .height(60.dp)
+
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Latitude: $homeLatitude, Longitude: $homeLongitude", color = Color.White)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Button(
+                    onClick = {
+                        val intent = Intent(context, MapPickerActivity::class.java)
+                        mapPickerLauncher.launch(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Pick Home Location")
+                }
             }
 
             // Signup Button
@@ -213,17 +194,10 @@ fun SignupScreen(
                             pinCode = pinCode,
                             city = city,
                             district = district,
-                            role = selectedRole
+                            role = selectedRole,
+                            homeLatitude = homeLatitude.toDoubleOrNull(),
+                            homeLongitude = homeLongitude.toDoubleOrNull()
                         )
-                        // Reset fields after signup
-                        fullName = ""
-                        email = ""
-                        password = ""
-                        address = ""
-                        pinCode = ""
-                        city = ""
-                        district = ""
-                        selectedRole = ""
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -249,21 +223,20 @@ fun SignupScreen(
                         }
                 )
             }
-
-            // Display Auth Result
-            item {
-                authResult?.let { result ->
-                    Spacer(modifier = Modifier.height(8.dp))
-                    when (result) {
-                        is Result.Success -> Text("Registration successful", color = Color.Green)
-                        is Result.Error -> Text("Registration failed: ${result.message}", color = Color.Red)
-                        Result.Loading -> Text("Loading...", color = Color.Gray)
-                    }
-                }
-            }
         }
     }
 }
+
+@Composable
+fun createTextField(label: String, value: String, onValueChange: (String) -> Unit) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
 
 // Mock function for autofilling city and district
 fun getCityAndDistrictFromPin(pinCode: String): Pair<String, String> {
