@@ -51,7 +51,7 @@ fun DefaultScreen(navController: NavController, authViewModel: AuthViewModel,) {
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = colorResource(id = R.color.black)
                 ),
-                title = { Text(text = "lbs Problems", color = colorResource(id = R.color.white)) },
+                title = { Text(text = "Home", color = colorResource(id = R.color.white)) },
                 actions = {
                     IconButton(onClick = {
                         authViewModel.logout()

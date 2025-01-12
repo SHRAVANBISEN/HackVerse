@@ -4,6 +4,8 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,10 +13,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.welfare.R
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
@@ -65,7 +71,7 @@ class MapPickerActivity : ComponentActivity() {
                                 setResult(Activity.RESULT_OK, resultIntent)
                                 finish()
                             },
-                            initialLocation = currentLatLng,
+                            currentLocation = currentLatLng,
                             onCurrentLocationRequested = {
                                 requestCurrentLocation()
                             }
@@ -87,16 +93,34 @@ class MapPickerActivity : ComponentActivity() {
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapPickerScreen(
     onLocationSelected: (LatLng) -> Unit,
     initialLocation: LatLng = LatLng(28.6129, 77.2295),
+    currentLocation: LatLng? = null,
     onCurrentLocationRequested: () -> Unit
 ) {
+    val context = LocalContext.current
     var selectedLocation by remember { mutableStateOf<LatLng?>(null) }
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(initialLocation, 15f)
+    }
+
+    // Function to resize the PNG marker
+    fun getResizedBitmap(resId: Int, width: Int, height: Int): Bitmap {
+        val bitmap = BitmapFactory.decodeResource(context.resources, resId)
+        return Bitmap.createScaledBitmap(bitmap, width, height, false)
+    }
+
+    // Update the camera position when currentLocation is set
+    currentLocation?.let {
+        LaunchedEffect(it) {
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(it, 15f)
+            )
+        }
     }
 
     Scaffold(
@@ -129,10 +153,21 @@ fun MapPickerScreen(
                         selectedLocation = latLng
                     }
                 ) {
+                    // Marker for selected location
                     selectedLocation?.let {
                         Marker(
                             state = MarkerState(position = it),
                             title = "Selected Location"
+                        )
+                    }
+
+                    // Marker for current location with a resized PNG icon
+                    currentLocation?.let {
+                        val resizedBitmap = getResizedBitmap(R.drawable.blocationmarker, 100, 100)  // Adjust width and height as needed
+                        Marker(
+                            state = MarkerState(position = it),
+                            title = "Your Location",
+                            icon = BitmapDescriptorFactory.fromBitmap(resizedBitmap)
                         )
                     }
                 }
@@ -140,3 +175,4 @@ fun MapPickerScreen(
         }
     )
 }
+

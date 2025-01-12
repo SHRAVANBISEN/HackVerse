@@ -60,7 +60,10 @@ android {
 }
 
 dependencies {
-    implementation ("com.google.android.gms:play-services-maps:18.1.0")
+    //WEB3
+    implementation("org.web3j:crypto:4.9.4")
+    implementation ("org.web3j:core:4.9.8")
+    implementation ("org.web3j:contracts:4.9.8")
     implementation ("com.google.maps.android:maps-compose:2.11.0")
     implementation ("androidx.compose.material:material:1.1.0")
 
